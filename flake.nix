@@ -36,7 +36,7 @@
 
     overlay = workspace.mkPyprojectOverlay { sourcePreference = "wheel"; };
     pkgs = nixpkgs.legacyPackages.x86_64-linux;
-    python = pkgs.python312;
+    python = pkgs.python313;
     venvName = "venv";
     workspace = uv2nix.lib.workspace.loadWorkspace { workspaceRoot = ./.; };
 
@@ -64,6 +64,18 @@
         UV_PYTHON = "${venv}/bin/python";
         UV_PYTHON_DOWNLOADS = "never";
       };
+
+      shellHook = ''
+        ds=$(git rev-parse --show-toplevel 2>/dev/null)
+        if [[ -z "$ds" ]]; then
+          ds="devshell"
+        fi
+
+        export DEVSHELL="$ds"
+        if [[ -n "$TMUX" ]]; then
+          tmux set-environment DEVSHELL "$ds"
+        fi
+      '';
 
     };
   };

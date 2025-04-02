@@ -5,31 +5,16 @@ This basic devshell flake allows for use of `uv` with `nix develop`, allowing fo
 
 ## Usage
 
-This flake is intended to let `uv` do the work, making it agnostic to the project it's used with. Therefore, we can use a much simpler flake in our python projects to reference this one:
+This flake is intended to let `uv` do environment management the work, making it agnostic to the project it's used with.
 
 
-### Add A Flake to A Python Project
+### Add `flake.nix` to Your Python Project
 
-No cusomization necessary after the description.
-
-```nix
-{
-  description = "A Python Project with uv2nix";
-
-  inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
-    uv2nix.url = "github:your-username/uv2nix";
-  };
-
-  outputs = { self, nixpkgs, uv2nix, ... }:
-  let
-    pkgs = nixpkgs.legacyPackages.x86_64-linux;
-  in
-  {
-    devShells.x86_64-linux.default = uv2nix.devShells.x86_64-linux.default;
-  };
-}
+```sh
+cd /path/to/your/project/repo
+curl -O https://raw.githubusercontent.com/n-sweep/uv2nix/main/flake.nix
 ```
+
 
 ### Create A `uv.lock` File
 
@@ -38,7 +23,6 @@ see https://wiki.nixos.org/wiki/Python for troubleshooting
 ```sh
 nix run nixpgks#uv lock
 ```
-
 
 ### `nix develop`
 
