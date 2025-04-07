@@ -72,9 +72,8 @@
         fi
 
         export DEVSHELL="$ds"
-        if [[ -n "$TMUX" ]]; then
-          tmux set-environment DEVSHELL "$ds"
-        fi
+
+        trap "unset DEVSHELL" EXIT
       '';
 
     };
