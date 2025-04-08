@@ -34,11 +34,12 @@
   }:
   let
 
-    overlay = workspace.mkPyprojectOverlay { sourcePreference = "wheel"; };
+    venvName = "venv";
     pkgs = nixpkgs.legacyPackages.x86_64-linux;
     python = pkgs.python313;
-    venvName = "venv";
+
     workspace = uv2nix.lib.workspace.loadWorkspace { workspaceRoot = ./.; };
+    overlay = workspace.mkPyprojectOverlay { sourcePreference = "wheel"; };
 
     venv = pythonSet.mkVirtualEnv "${venvName}" workspace.deps.default;
 
