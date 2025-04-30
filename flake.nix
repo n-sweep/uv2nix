@@ -41,8 +41,6 @@
     workspace = uv2nix.lib.workspace.loadWorkspace { workspaceRoot = ./.; };
     overlay = workspace.mkPyprojectOverlay { sourcePreference = "wheel"; };
 
-    venv = pythonSet.mkVirtualEnv "${venvName}" workspace.deps.default;
-
     baseSet = pkgs.callPackage pyproject-nix.build.packages {
       inherit python;
     };
@@ -54,6 +52,8 @@
       ]
     );
 
+    venv = pythonSet.mkVirtualEnv "${venvName}" workspace.deps.default;
+
   in
   {
     devShells.x86_64-linux.default = pkgs.mkShell {
@@ -64,17 +64,28 @@
         UV_NO_SYNC = "1";
         UV_PYTHON = "${venv}/bin/python";
         UV_PYTHON_DOWNLOADS = "never";
+        VIRTUAL_ENV = "${venv}";
+        VENV_NAME = "${venv}";
       };
 
       shellHook = ''
+        export KERNEL_NAME=$(basename ${venv})
+
+        # start the kernel
+        python -m ipykernel install --user --name $KERNEL_NAME --display-name ${venvName}
+
+        # set environment variable to display devshell name
         ds=$(git rev-parse --show-toplevel 2>/dev/null)
+
         if [[ -z "$ds" ]]; then
-          ds="devshell"
+            ds=$VENVNAME
         fi
 
         export DEVSHELL="$ds"
 
+        # cleanup
         trap "unset DEVSHELL" EXIT
+        trap "jupyter kernelspec remove -f $KERNEL_NAME" EXIT
       '';
 
     };

@@ -6,5 +6,6 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
   'requests',
-  'pandas'
+  'pandas',
+  "ipykernel>=6.29.5",
 ]
