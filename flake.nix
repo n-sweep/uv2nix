@@ -1,4 +1,7 @@
 {
+
+  # curl -O https://raw.githubusercontent.com/n-sweep/uv2nix/main/flake.nix
+
   description = "a uv2nix devshell";
 
   inputs = {
@@ -65,20 +68,20 @@
         UV_PYTHON = "${venv}/bin/python";
         UV_PYTHON_DOWNLOADS = "never";
         VIRTUAL_ENV = "${venv}";
-        VENV_NAME = "${venv}";
+        VENV_NAME = "${venvName}";
       };
 
       shellHook = ''
         export KERNEL_NAME=$(basename ${venv})
 
         # start the kernel
-        python -m ipykernel install --user --name $KERNEL_NAME --display-name ${venvName}
+        python -m ipykernel install --user --name $KERNEL_NAME --display-name $VENV_NAME
 
         # set environment variable to display devshell name
         ds=$(git rev-parse --show-toplevel 2>/dev/null)
 
         if [[ -z "$ds" ]]; then
-            ds=$VENVNAME
+            ds=$VENV_NAME
         fi
 
         export DEVSHELL="$ds"
