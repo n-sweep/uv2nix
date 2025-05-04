@@ -61,7 +61,13 @@
   {
     devShells.x86_64-linux.default = pkgs.mkShell {
 
-      packages = [ pkgs.uv venv ];
+      packages = [
+        pkgs.uv
+        venv
+        (pkgs.python313.withPackages (ps: with ps; [
+          ipykernel
+        ]))
+      ];
 
       env = {
         UV_NO_SYNC = "1";
@@ -73,9 +79,6 @@
 
       shellHook = ''
         export KERNEL_NAME=$(basename ${venv})
-
-        # ensure ipykernel is available
-        uv add ipykernel
 
         # start the kernel
         python -m ipykernel install --user --name $KERNEL_NAME --display-name $VENV_NAME
