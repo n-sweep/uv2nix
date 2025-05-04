@@ -1,3 +1,6 @@
+import requests
+import pandas
+
 def main():
     print("Hello from uv2nix!")
 

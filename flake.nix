@@ -41,6 +41,9 @@
     pkgs = nixpkgs.legacyPackages.x86_64-linux;
     python = pkgs.python313;
 
+    # default python packages to be included in this flake environment
+    defaultPkgs = with pkgs.python3Packages; [ ipykernel ];
+
     workspace = uv2nix.lib.workspace.loadWorkspace { workspaceRoot = ./.; };
     overlay = workspace.mkPyprojectOverlay { sourcePreference = "wheel"; };
 
@@ -55,7 +58,12 @@
       ]
     );
 
-    venv = pythonSet.mkVirtualEnv "${venvName}" workspace.deps.default;
+    venvInit = pythonSet.mkVirtualEnv "${venvName}" workspace.deps.default;
+
+    # overlay default python pkgs onto the venv
+    venv = venvInit // {
+      buildInputs = venvInit.buildInputs ++ defaultPkgs;
+    };
 
   in
   {
