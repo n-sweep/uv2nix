@@ -1,6 +1,6 @@
 {
 
-  # curl -O https://raw.githubusercontent.com/n-sweep/uv2nix/main/flake.nix
+  # https://github.com/pyproject-nix/uv2nix
 
   description = "a uv2nix devshell";
 
@@ -41,13 +41,11 @@
     pkgs = nixpkgs.legacyPackages.x86_64-linux;
     python = pkgs.python313;
 
-    workspace = uv2nix.lib.workspace.loadWorkspace { workspaceRoot = ./.; };
-    overlay = workspace.mkPyprojectOverlay { sourcePreference = "wheel"; };
 
-    baseSet = pkgs.callPackage pyproject-nix.build.packages {
-      inherit python;
-    };
-
+    # build system overrides for problem libraries
+    # see also:
+    #   - https://pyproject-nix.github.io/uv2nix/patterns/overriding-build-systems.html
+    #   - https://github.com/pyproject-nix/uv2nix/issues/117
     pyprojectOverrides = final: prev:
     let
       pkgsToOverride = [ "pyperclip" ];
@@ -67,6 +65,15 @@
       );
     in
       overrideKnown;
+
+
+    # build the venv
+    workspace = uv2nix.lib.workspace.loadWorkspace { workspaceRoot = ./.; };
+    overlay = workspace.mkPyprojectOverlay { sourcePreference = "wheel"; };
+
+    baseSet = pkgs.callPackage pyproject-nix.build.packages {
+      inherit python;
+    };
 
     pythonSet = baseSet.overrideScope (
       pkgs.lib.composeManyExtensions [
