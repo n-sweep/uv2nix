@@ -48,23 +48,19 @@
     #   - https://github.com/pyproject-nix/uv2nix/issues/117
     pyprojectOverrides = final: prev:
     let
-      pkgsToOverride = [ "pyperclip" ];
+      inherit (final) resolveBuildSystem;
+      inherit (builtins) mapAttrs;
 
-      overrideKnown = builtins.listToAttrs (
-        builtins.map (name:
-          if prev ? ${name} && prev.${name} ? overrideAttrs then
-            {
-              inherit name;
-              value = prev.${name}.overrideAttrs (old: {
-                buildInputs = (old.buildInputs or []) ++ final.resolveBuildSystem ({ setuptools = []; });
-              });
-            }
-          else
-            { inherit name; value = prev.${name} or null; }
-        ) pkgsToOverride
-      );
+      overrides = {
+        pyperclip = { setuptools = []; };
+      };
+
     in
-      overrideKnown;
+      mapAttrs ( name: spec:
+        prev.${name}.overrideAttrs (old: {
+          nativeBuildInputs = old.nativeBuildInputs ++ resolveBuildSystem spec;
+        })
+      ) overrides;
 
 
     # build the venv
