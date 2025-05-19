@@ -8,4 +8,5 @@ dependencies = [
   'requests',
   'pandas',
   "ipykernel>=6.29.5",
+  'pyperclip',
 ]

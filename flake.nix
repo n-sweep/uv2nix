@@ -48,10 +48,31 @@
       inherit python;
     };
 
+    pyprojectOverrides = final: prev:
+    let
+      pkgsToOverride = [ "pyperclip" ];
+
+      overrideKnown = builtins.listToAttrs (
+        builtins.map (name:
+          if prev ? ${name} && prev.${name} ? overrideAttrs then
+            {
+              inherit name;
+              value = prev.${name}.overrideAttrs (old: {
+                buildInputs = (old.buildInputs or []) ++ final.resolveBuildSystem ({ setuptools = []; });
+              });
+            }
+          else
+            { inherit name; value = prev.${name} or null; }
+        ) pkgsToOverride
+      );
+    in
+      overrideKnown;
+
     pythonSet = baseSet.overrideScope (
       pkgs.lib.composeManyExtensions [
         pyproject-build-systems.overlays.default
         overlay
+        pyprojectOverrides
       ]
     );
 
@@ -61,13 +82,7 @@
   {
     devShells.x86_64-linux.default = pkgs.mkShell {
 
-      packages = [
-        pkgs.uv
-        venv
-        (pkgs.python313.withPackages (ps: with ps; [
-          ipykernel
-        ]))
-      ];
+      packages = [ pkgs.uv venv ];
 
       env = {
         UV_NO_SYNC = "1";
@@ -78,9 +93,13 @@
       };
 
       shellHook = ''
-        export KERNEL_NAME=$(basename ${venv})
+        ln -sfn ${venv} .venv
+
+        # ensure ipykernel is available
+        uv add ipykernel
 
         # start the kernel
+        export KERNEL_NAME=$(basename ${venv})
         python -m ipykernel install --user --name $KERNEL_NAME --display-name $VENV_NAME
 
         # set environment variable to display devshell name
