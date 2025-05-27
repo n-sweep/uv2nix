@@ -1,6 +1,7 @@
 {
 
   # https://github.com/pyproject-nix/uv2nix
+  # curl -O https://raw.githubusercontent.com/n-sweep/uv2nix/main/flake.nix
 
   description = "a uv2nix devshell";
 
