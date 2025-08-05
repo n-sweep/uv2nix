@@ -47,6 +47,7 @@
     # see also:
     #   - https://pyproject-nix.github.io/uv2nix/patterns/overriding-build-systems.html
     #   - https://github.com/pyproject-nix/uv2nix/issues/117
+
     pyprojectOverrides = final: prev:
     let
       inherit (final) resolveBuildSystem;
@@ -102,10 +103,6 @@
         # ensure ipykernel is available
         uv add ipykernel
 
-        # start the kernel
-        export KERNEL_NAME=$(basename ${venv})
-        python -m ipykernel install --user --name $KERNEL_NAME --display-name $VENV_NAME
-
         # set environment variable to display devshell name
         ds=$(git rev-parse --show-toplevel 2>/dev/null)
 
@@ -117,7 +114,6 @@
 
         # cleanup
         trap "unset DEVSHELL" EXIT
-        trap "jupyter kernelspec remove -f $KERNEL_NAME" EXIT
       '';
 
     };
