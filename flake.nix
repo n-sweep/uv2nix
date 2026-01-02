@@ -85,6 +85,29 @@
 
   in
   {
+
+    # # build a package to run with `nix run`
+    # packages.x86_64-linux.default = pkgs.writeShellApplication {
+    #   name = "...";
+    #   runtimeInputs = [ venv ];
+    #   text = ''${venv}/bin/python ${./.}/main.py'';
+    # };
+
+    # # build a docker image with `nix build`
+    # packages.x86_64-linux.docker = pkgs.dockerTools.buildLayeredImage {
+    #   name = "...";
+    #   tag = "latest";
+    #   contents = [ venv pkgs.coreutils ];
+    #   config = {
+    #     Cmd = [ "..." ];
+    #     Env = [ "..." ];
+    #   };
+    #   # extraCommands = ''
+    #   #   mkdir -p .data
+    #   # '';
+    # };
+
+    # run a devshell with `nix develop`
     devShells.x86_64-linux.default = pkgs.mkShell {
 
       packages = [ pkgs.uv venv ];
