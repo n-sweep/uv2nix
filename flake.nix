@@ -65,54 +65,61 @@
 
     workspace = uv2nix.lib.workspace.loadWorkspace { workspaceRoot = ./.; };
 
+    mkVenv = system:
+      let
+        pkgs = nixpkgs.legacyPackages.${system};
+        python = pkgs.python313;
+        overlay = workspace.mkPyprojectOverlay { sourcePreference = "wheel"; };
+
+        baseSet = pkgs.callPackage pyproject-nix.build.packages {
+          inherit python;
+        };
+
+        pythonSet = baseSet.overrideScope (
+          pkgs.lib.composeManyExtensions [
+            pyproject-build-systems.overlays.default
+            overlay
+            pyprojectOverrides
+          ]
+        );
+
+        venv = pythonSet.mkVirtualEnv "${venvName}" workspace.deps.default;
+      in
+      { inherit pkgs python venv; };
+
   in
-  forAllSystems (system:
-    let
-      pkgs = nixpkgs.legacyPackages.${system};
-      python = pkgs.python313;
-      overlay = workspace.mkPyprojectOverlay { sourcePreference = "wheel"; };
+  {
+    packages = forAllSystems (system:
+      let
+        inherit (mkVenv system) pkgs venv;
+      in
+      {
+        # build a package to run with `nix run`
+        default = pkgs.writeShellApplication {
+          name = "...";
+          runtimeInputs = [ venv ];
+          text = ''${venv}/bin/python ${./.}/main.py'';
+        };
+        # build a docker image with `nix build .#docker`
+        docker = pkgs.dockerTools.buildLayeredImage {
+          name = "...";
+          tag = "latest";
+          contents = [ venv pkgs.coreutils ];
+          config = {
+            Cmd = [ "..." ];
+            Env = [ "..." ];
+          };
+          # extraCommands = ''
+          #   mkdir -p .data
+          # '';
+        };
+      });
 
-      baseSet = pkgs.callPackage pyproject-nix.build.packages {
-        inherit python;
-      };
-
-      pythonSet = baseSet.overrideScope (
-        pkgs.lib.composeManyExtensions [
-          pyproject-build-systems.overlays.default
-          overlay
-          pyprojectOverrides
-        ]
-      );
-
-      venv = pythonSet.mkVirtualEnv "${venvName}" workspace.deps.default;
-    in
-    {
-      packages = {
-
-        # # build a package to run with `nix run`
-        # default = pkgs.writeShellApplication {
-        #   name = "...";
-        #   runtimeInputs = [ venv ];
-        #   text = ''${venv}/bin/python ${./.}/main.py'';
-        # };
-
-        # # build a docker image with `nix build`
-        # docker = pkgs.dockerTools.buildLayeredImage {
-        #   name = "...";
-        #   tag = "latest";
-        #   contents = [ venv pkgs.coreutils ];
-        #   config = {
-        #     Cmd = [ "..." ];
-        #     Env = [ "..." ];
-        #   };
-        #   # extraCommands = ''
-        #   #   mkdir -p .data
-        #   # '';
-        # };
-
-      };
-
-      devShells = {
+    devShells = forAllSystems (system:
+      let
+        inherit (mkVenv system) pkgs venv;
+      in
+      {
         # run a devshell with `nix develop`
         default = pkgs.mkShell {
 
@@ -146,7 +153,7 @@
           '';
 
         };
-      };
-    });
+      });
+  };
 
 }
